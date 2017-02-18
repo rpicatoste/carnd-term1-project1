@@ -1,3 +1,5 @@
+#%%
+
 # -*- coding: utf-8 -*-
 """
 Created on Sat Feb 18 13:18:26 2017
@@ -13,63 +15,40 @@ import numpy as np
 import cv2
 import math
 from functions import *
+import os
 
 #%matplotlib inline
 
 folder_files = "CarND-LaneLines-P1"
 
-#reading in an image
-image = mpimg.imread(folder_files + '/test_images/solidWhiteRight.jpg')
-
-#printing out some stats and plotting
-print('This image is:', type(image), 'with dimesions:', image.shape)
-plt.imshow(image)  
-#plt.imshow(grayscale(image))
-# if you wanted to show a single color channel image called 'gray', 
-# for example, call as plt.imshow(image, cmap='gray')
-
-
-
-import os
 list_images = os.listdir(folder_files + "/test_images/") 
 
 # TODO: Build your pipeline that will draw lane lines on the test_images
 # then save them to the test_images directory.
-
-#%%
-
 %clear
-
-ker_size = 5
-low_threshold = 50
-high_threshold = 150
-
-image_name = list_images[0]
-image = mpimg.imread(folder_files + '/test_images/' + image_name)
-plt.imshow(image) 
-
-print("image")
-plt.show()
-
-
-im_gray = grayscale( image )
-plt.imshow( im_gray ) 
-
-print("image gray")
-plt.show()
-
-im_blur = gaussian_blur( im_gray, ker_size )
-plt.imshow( im_blur ) 
-
-print("image gray and blur")
-plt.show()
-
-im_canny = canny( im_blur , low_threshold, high_threshold)
-plt.imshow( im_canny ) 
-
-print("canny")
-plt.show()
-
+for image_name in list_images:
+    
+#image_name = list_images[0]
+    image = mpimg.imread(folder_files + '/test_images/' + image_name)
+    im_result = my_pipeline(image)
+    plt.imshow( im_result ) 
+    print("Final image: " + image_name)
+    plt.show()
+    
 
 
 print("done")
+
+#%%
+
+# Import everything needed to edit/save/watch video clips
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+
+
+def process_image(image):
+    # NOTE: The output you return should be a color image (3 channel) for processing video below
+    # TODO: put your pipeline here,
+    # you should return the final output (image where lines are drawn on lanes)
+
+    return result
