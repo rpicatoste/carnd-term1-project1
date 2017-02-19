@@ -295,21 +295,21 @@ def my_pipeline(image, plot_all=0):
 
 
 
-# Testing on single images
-
-import matplotlib.image as mpimg
-import os
-
-folder_files = "CarND-LaneLines-P1"
-list_images = os.listdir(folder_files + "/test_images/") 
- 
-for image_name in list_images:
-#image_name = list_images[1]
-    image = mpimg.imread(folder_files + '/test_images/' + image_name)
-    im_result = my_pipeline(image,1)
-plt.imshow( im_result ) 
-print("Final image: " + image_name)
-plt.show()
+## Testing on single images
+#
+#import matplotlib.image as mpimg
+#import os
+#
+#folder_files = "CarND-LaneLines-P1"
+#list_images = os.listdir(folder_files + "/test_images/") 
+# 
+#for image_name in list_images:
+##image_name = list_images[1]
+#    image = mpimg.imread(folder_files + '/test_images/' + image_name)
+#    im_result = my_pipeline(image,1)
+#plt.imshow( im_result ) 
+#print("Final image: " + image_name)
+#plt.show()
         
 
 
