@@ -4,15 +4,11 @@ Created on Sat Feb 18 13:55:54 2017
 
 @author: Pica
 """
+#%%
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-
-
-
-def my_print():
-    print("hola")
 
 
 def grayscale(img):
@@ -42,7 +38,8 @@ def region_of_interest(img, vertices):
     #defining a blank mask to start with
     mask = np.zeros_like(img)   
     
-    #defining a 3 channel or 1 channel color to fill the mask with depending on the input image
+    #defining a 3 channel or 1 channel color to fill the mask with depending on
+    #the input image
     if len(img.shape) > 2:
         channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
         ignore_mask_color = (255,) * channel_count
@@ -56,12 +53,24 @@ def region_of_interest(img, vertices):
     masked_image = cv2.bitwise_and(img, mask)
     return masked_image
 
+def line_get_distance(line):
+    
+    x1,y1,x2,y2 = line[0]
+    return math.sqrt( (x2-x1)**2 + (y2-y1)**2 )
+    
+def line_get_slope_and_offset(x1,y1,x2,y2):
+    
+    m0 = (y2-y1)/(x2-x1)
+    b0 = y1 - m0*x1
+    
+    return m0, b0
+
 
 def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     """
-    NOTE: this is the function you might want to use as a starting point once
-    you want to average/extrapolate the line segments you detect to map out 
-    the full extent of the lane (going from the result shown in 
+    NOTE: this is the function you might want to use as a starting point 
+    once you want to average/extrapolate the line segments you detect to
+    map out the full extent of the lane (going from the result shown in 
     raw-lines-example.mp4 to that shown in P1_example.mp4).  
     
     Think about things like separating line segments by their 
@@ -74,9 +83,69 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     If you want to make the lines semi-transparent, think about combining
     this function with the weighted_img() function below
     """
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+        
+    # TODO pass the middle of the image as parameter
+    middle_of_image = 450
+    
+    left_max_distance = 0
+    right_max_distance = 0
+    left_max_index = -1
+    right_max_index = -1
+    
+    # Select the longest lines, one for the right and one for the left.
+    for i in range(len(lines)):
+        x1,y1,x2,y2 = lines[i][0]
+        
+        distance = line_get_distance(lines[i])
+        
+        m0, b0 = line_get_slope_and_offset(x1,y1,x2,y2)
+        # Process right
+        if x1 >= middle_of_image: 
+            if(distance > right_max_distance):
+                right_max_distance = distance
+                right_max_index = i
+                print("m0 for the right:" + str(m0))
+        else: 
+            if(distance > left_max_distance):
+                left_max_distance = distance
+                left_max_index = i
+                
+                print("m0 for the left:" + str(m0))
+        #            print("Max distances: " + str(max_distance) + " for indexes: " + str(max_indexes) )
+    
+    # Convert lines from the best found to complete lines.
+    for i in [left_max_index, right_max_index]:
+        if i == -1:
+            continue
+        
+        x1,y1,x2,y2 = lines[i][0]
+        # Get standard equation
+        m0, b0 = line_get_slope_and_offset(x1,y1,x2,y2)
+        
+        # Obtain the points corresponding to the bottom and top
+        # TODO pass ybottom and ytop from the Region of Interest
+        ybottom = 540
+        ytop = 350
+        if m0 == math.inf:
+            xbottom = x1
+            xtop = x1
+        elif m0 == 0.0:
+            xbottom = x1
+            xtop = x1
+        else:
+            xbottom = int((ybottom - b0) / m0)
+            xtop = int((ytop - b0) / m0)
+            
+        cv2.line(img, (xbottom, ybottom), (xtop, ytop), [0, 255, 0], thickness*3)
+    
+#    # Plot the lines
+    if left_max_index != -1:
+        x1,y1,x2,y2 = lines[left_max_index][0]
+        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+    if right_max_index != -1:
+        x1,y1,x2,y2 = lines[right_max_index][0]
+        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+    
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     """
@@ -109,7 +178,10 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
 def my_pipeline(image):
-    plot_all = 0 
+    return my_pipeline_testing(image, 0)
+    
+    
+def my_pipeline_testing(image, plot_all=0):
 
     # Parameters of the detection
     ker_size = 5
@@ -117,17 +189,22 @@ def my_pipeline(image):
     high_threshold = 150
     
     fraction_top = 1/100*60     # distance to the the top as fraction
-    fraction_left = 1/100*16
-    fraction_right = 1/100*84
+    fraction_top_left = 1/100*40
+    fraction_left = 1/100*10
+    fraction_top_right = 1/100*60
+    fraction_right = 1/100*90
     
     # Define the Hough transform parameters
-    rho = 1*0.5 # distance resolution in pixels of the Hough grid
-    theta = np.pi/180 *0.1# angular resolution in radians of the Hough grid
-    threshold = 15#4     # minimum number of votes (intersections in Hough grid cell)
-    min_line_length = 40 #minimum number of pixels making up a line
-    max_line_gap = 20#8    # maximum gap in pixels between connectable line segments
+    rho = 1*1. # distance resolution in pixels of the Hough grid
+    theta = np.pi/180 *1# angular resolution in radians of the Hough grid
+#    threshold = 5#4     # minimum number of votes (intersections in Hough grid cell)
+#    min_line_length = 20 #minimum number of pixels making up a line
+#    max_line_gap = 50#8    # maximum gap in pixels between connectable line segments
+    threshold = 3#4     # minimum number of votes (intersections in Hough grid cell)
+    min_line_length = 20 #minimum number of pixels making up a line
+    max_line_gap = 150#8    # maximum gap in pixels between connectable line segments
 
-    if(plot_all):
+    if(0):#plot_all):
         plt.imshow(image) 
         print("image")
         plt.show()
@@ -136,21 +213,21 @@ def my_pipeline(image):
     im_gray = grayscale( image )
     
     
-    if(plot_all):
+    if(0):#plot_all):
         plt.imshow( im_gray ) 
         print("image gray")
         plt.show()
     
     im_blur = gaussian_blur( im_gray, ker_size )
     
-    if(plot_all):
+    if(0):#plot_all):
         plt.imshow( im_blur ) 
         print("image gray and blur")
         plt.show()
     
     im_canny = canny( im_blur , low_threshold, high_threshold)
     
-    if(plot_all):
+    if(0):#plot_all):
         plt.imshow( im_canny ) 
         print("canny")
         plt.show()
@@ -160,13 +237,15 @@ def my_pipeline(image):
     
     bottom = imshape[0]
     top = imshape[0]*fraction_top
-    left = imshape[1]*fraction_left
-    right = imshape[1]*fraction_right 
+    top_left = imshape[1]*fraction_top_left
+    top_right = imshape[1]*fraction_top_right
+    bottom_left = imshape[1]*fraction_left
+    bottom_right = imshape[1]*fraction_right 
                    
-    vertices = np.array([[  (left,bottom),\
-                            (left, top), \
-                            (right, top), \
-                            (right,bottom)]], \
+    vertices = np.array([[  (bottom_left,   bottom),\
+                            (top_left,      top), \
+                            (top_right,     top), \
+                            (bottom_right,  bottom)]], \
                             dtype=np.int32)
     
     im_cropped = region_of_interest( im_canny, vertices )
@@ -189,9 +268,31 @@ def my_pipeline(image):
     
     
     im_final = weighted_img(im_hough, image, α=0.8, β=1., λ=0.)
-    if(plot_all):
+    if(0):#plot_all):
         plt.imshow( im_final ) 
         print("Final image")
         plt.show()
 
     return im_final
+    
+
+
+
+# Testing on a single image
+import matplotlib.image as mpimg
+import os
+
+folder_files = "CarND-LaneLines-P1"
+list_images = os.listdir(folder_files + "/test_images/") 
+ 
+for image_name in list_images:
+#image_name = list_images[1]
+    image = mpimg.imread(folder_files + '/test_images/' + image_name)
+    im_result = my_pipeline_testing(image,1)
+plt.imshow( im_result ) 
+print("Final image: " + image_name)
+plt.show()
+        
+
+
+print("Imported functions.py")
