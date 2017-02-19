@@ -60,13 +60,23 @@ def line_get_distance(line):
     
 def line_get_slope_and_offset(x1,y1,x2,y2):
     
-    m0 = (y2-y1)/(x2-x1)
+    if x1 == x2:
+        m0 = math.inf
+    else:
+        m0 = (y2-y1)/(x2-x1)
+
     b0 = y1 - m0*x1
     
     return m0, b0
 
+def line_get_x(m, b, y):
+    if m == 0.0:
+        return math.nan
+    
+    x = (y-b)/m        
+    return x
 
-def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
+def draw_lines(img, lines, roi_vertices, color=[255, 0, 0], thickness=2):
     """
     NOTE: this is the function you might want to use as a starting point 
     once you want to average/extrapolate the line segments you detect to
@@ -85,8 +95,11 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     """
         
     # TODO pass the middle of the image as parameter
-    middle_of_image = 450
-    
+    # TODO pass ybottom and ytop from the Region of Interest
+    middle_of_image = int( (roi_vertices[0][0][0]+roi_vertices[0][1][0]) / 2.0 )
+    ybottom = roi_vertices[0][0][1]        
+    ytop = roi_vertices[0][1][1]
+    #print("roi " + str(roi_vertices))
     left_max_distance = 0
     right_max_distance = 0
     left_max_index = -1
@@ -99,18 +112,24 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
         distance = line_get_distance(lines[i])
         
         m0, b0 = line_get_slope_and_offset(x1,y1,x2,y2)
+        # Get the x where the line starts at the bottom to help deciding left 
+        # or right
+        xbottom = line_get_x(m0, b0, ybottom)
+        # Lines below a threshold degrees and above 180-threshold will be 
+        # dropped (too horizontal). 
+        threshold = 0.5
         # Process right
-        if x1 >= middle_of_image: 
+        if m0 >= threshold and line_get_x(m0, b0, ybottom) > middle_of_image: 
             if(distance > right_max_distance):
                 right_max_distance = distance
                 right_max_index = i
-                print("m0 for the right:" + str(m0))
-        else: 
+#                print("m0 for the right:" + str(m0))
+        elif m0 <= -threshold and line_get_x(m0, b0, ybottom) < middle_of_image: 
             if(distance > left_max_distance):
                 left_max_distance = distance
                 left_max_index = i
                 
-                print("m0 for the left:" + str(m0))
+#                print("m0 for the left:" + str(m0))
         #            print("Max distances: " + str(max_distance) + " for indexes: " + str(max_indexes) )
     
     # Convert lines from the best found to complete lines.
@@ -123,9 +142,6 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
         m0, b0 = line_get_slope_and_offset(x1,y1,x2,y2)
         
         # Obtain the points corresponding to the bottom and top
-        # TODO pass ybottom and ytop from the Region of Interest
-        ybottom = 540
-        ytop = 350
         if m0 == math.inf:
             xbottom = x1
             xtop = x1
@@ -138,16 +154,16 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
             
         cv2.line(img, (xbottom, ybottom), (xtop, ytop), [0, 255, 0], thickness*3)
     
-#    # Plot the lines
-    if left_max_index != -1:
-        x1,y1,x2,y2 = lines[left_max_index][0]
-        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
-    if right_max_index != -1:
-        x1,y1,x2,y2 = lines[right_max_index][0]
-        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+#    # Plot original the lines
+#    if left_max_index != -1:
+#        x1,y1,x2,y2 = lines[left_max_index][0]
+#        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+#    if right_max_index != -1:
+#        x1,y1,x2,y2 = lines[right_max_index][0]
+#        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
     
 
-def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
+def hough_lines(img, roi_vertices, rho, theta, threshold, min_line_len, max_line_gap):
     """
     `img` should be the output of a Canny transform.
         
@@ -158,7 +174,7 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
                             minLineLength = min_line_len, \
                             maxLineGap = max_line_gap )
     line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    draw_lines(line_img, lines)
+    draw_lines(line_img, lines, roi_vertices)
     return line_img
 
 # Python 3 has support for cool math symbols.
@@ -259,7 +275,7 @@ def my_pipeline_testing(image, plot_all=0):
     
     # Hough transform
     # Run Hough on edge detected image
-    im_hough = hough_lines(im_cropped, rho, theta, threshold, min_line_length, max_line_gap)
+    im_hough = hough_lines(im_cropped, vertices, rho, theta, threshold, min_line_length, max_line_gap)
     
     if(plot_all):
         plt.imshow( im_hough ) 
@@ -279,6 +295,7 @@ def my_pipeline_testing(image, plot_all=0):
 
 
 # Testing on a single image
+
 import matplotlib.image as mpimg
 import os
 
