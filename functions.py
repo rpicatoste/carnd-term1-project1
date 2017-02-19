@@ -72,7 +72,10 @@ def line_get_slope_and_offset(x1,y1,x2,y2):
 def line_get_x(m, b, y):
     if m == 0.0:
         return math.nan
+    if m == math.inf:
+        return 0.0 
     
+#    print("m - " + str(m) + "b - " + str(b) + "y - " + str(y))  
     x = (y-b)/m        
     return x
 
@@ -166,7 +169,8 @@ def draw_lines(img, lines, roi_vertices, color=[255, 0, 0], thickness=2):
 def hough_lines(img, roi_vertices, rho, theta, threshold, min_line_len, max_line_gap):
     """
     `img` should be the output of a Canny transform.
-        
+    roi_vertices is the region of interest. It will be used to plot the lanes
+    will full extent from the best lines found for them.
     Returns an image with hough lines drawn.
     """
     lines = cv2.HoughLinesP(img, rho, theta, threshold, \
@@ -193,7 +197,7 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
-def my_pipeline(image, plot_all=0, par):
+def my_pipeline(image, plot_all=0):
     
     # Parameters of the detection
     ker_size = 5
@@ -291,21 +295,21 @@ def my_pipeline(image, plot_all=0, par):
 
 
 
-## Testing on single images
-#
-#import matplotlib.image as mpimg
-#import os
-#
-#folder_files = "CarND-LaneLines-P1"
-#list_images = os.listdir(folder_files + "/test_images/") 
-# 
-#for image_name in list_images:
-##image_name = list_images[1]
-#    image = mpimg.imread(folder_files + '/test_images/' + image_name)
-#    im_result = my_pipeline(image,1)
-#plt.imshow( im_result ) 
-#print("Final image: " + image_name)
-#plt.show()
+# Testing on single images
+
+import matplotlib.image as mpimg
+import os
+
+folder_files = "CarND-LaneLines-P1"
+list_images = os.listdir(folder_files + "/test_images/") 
+ 
+for image_name in list_images:
+#image_name = list_images[1]
+    image = mpimg.imread(folder_files + '/test_images/' + image_name)
+    im_result = my_pipeline(image,1)
+plt.imshow( im_result ) 
+print("Final image: " + image_name)
+plt.show()
         
 
 
