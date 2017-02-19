@@ -193,7 +193,7 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
-def my_pipeline(image, plot_all=0):
+def my_pipeline(image, plot_all=0, par):
     
     # Parameters of the detection
     ker_size = 5
