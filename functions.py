@@ -200,11 +200,12 @@ def my_pipeline(image, plot_all=0):
     low_threshold = 50
     high_threshold = 150
     
+    # Parameters to select ROI as fraction of the image.
     fraction_top = 1/100*60     # distance to the the top as fraction
-    fraction_top_left = 1/100*40
-    fraction_left = 1/100*10
-    fraction_top_right = 1/100*60
-    fraction_right = 1/100*90
+    fraction_left_top = 1/100*40
+    fraction_left_bottom = 1/100*10
+    fraction_right_top = 1/100*60
+    fraction_right_bottom = 1/100*90
     
     # Define the Hough transform parameters
     rho = 1*1. # distance resolution in pixels of the Hough grid
@@ -249,10 +250,10 @@ def my_pipeline(image, plot_all=0):
     
     bottom = imshape[0]
     top = imshape[0]*fraction_top
-    top_left = imshape[1]*fraction_top_left
-    top_right = imshape[1]*fraction_top_right
-    bottom_left = imshape[1]*fraction_left
-    bottom_right = imshape[1]*fraction_right 
+    top_left = imshape[1]*fraction_left_top
+    top_right = imshape[1]*fraction_right_top
+    bottom_left = imshape[1]*fraction_left_bottom
+    bottom_right = imshape[1]*fraction_right_bottom 
                    
     vertices = np.array([[  (bottom_left,   bottom),\
                             (top_left,      top), \
