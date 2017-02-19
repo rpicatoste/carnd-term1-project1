@@ -193,12 +193,8 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
-def my_pipeline(image):
-    return my_pipeline_testing(image, 0)
+def my_pipeline(image, plot_all=0):
     
-    
-def my_pipeline_testing(image, plot_all=0):
-
     # Parameters of the detection
     ker_size = 5
     low_threshold = 50
@@ -294,21 +290,21 @@ def my_pipeline_testing(image, plot_all=0):
 
 
 
-# Testing on a single image
-
-import matplotlib.image as mpimg
-import os
-
-folder_files = "CarND-LaneLines-P1"
-list_images = os.listdir(folder_files + "/test_images/") 
- 
-for image_name in list_images:
-#image_name = list_images[1]
-    image = mpimg.imread(folder_files + '/test_images/' + image_name)
-    im_result = my_pipeline_testing(image,1)
-plt.imshow( im_result ) 
-print("Final image: " + image_name)
-plt.show()
+## Testing on single images
+#
+#import matplotlib.image as mpimg
+#import os
+#
+#folder_files = "CarND-LaneLines-P1"
+#list_images = os.listdir(folder_files + "/test_images/") 
+# 
+#for image_name in list_images:
+##image_name = list_images[1]
+#    image = mpimg.imread(folder_files + '/test_images/' + image_name)
+#    im_result = my_pipeline(image,1)
+#plt.imshow( im_result ) 
+#print("Final image: " + image_name)
+#plt.show()
         
 
 

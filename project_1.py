@@ -13,27 +13,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
-import math
 from functions import *
 import os
-
-#%matplotlib inline
-
-#folder_files = "CarND-LaneLines-P1"
-
-#list_images = os.listdir(folder_files + "/test_images/") 
-
-# TODO: Build your pipeline that will draw lane lines on the test_images
-# then save them to the test_images directory.
-#%clear
-#for image_name in list_images:
-#    image = mpimg.imread(folder_files + '/test_images/' + image_name)
-#    im_result = my_pipeline(image)
-#    plt.imshow( im_result ) 
-#    print("Final image: " + image_name)
-#    plt.show()
-#    
-
 
 print("done")
 
@@ -51,6 +32,10 @@ def process_image(image):
        
     return result
 
+directory = os.path.dirname("results/")
+if not os.path.exists(directory):
+    os.makedirs(directory)
+        
 #%%
 # next video
 white_output = 'results\white.mp4'
